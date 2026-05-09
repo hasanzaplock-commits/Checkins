@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>checkins. — Attendance management for modern teams</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,800;0,9..144,900;1,9..144,300;1,9..144,800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --forest: #0F2E15;
+  --forest-mid: #163820;
+  --forest-light: #1e4a2a;
+  --mint: #DAE2CB;
+  --mint-dim: rgba(218,226,203,0.55);
+  --mint-faint: rgba(218,226,203,0.06);
+  --accent: #6dab5e;
+  --accent-bright: #82c470;
+  --gold: #c9a84c;
+  --border: rgba(218,226,203,0.1);
+  --card: rgba(22,56,32,0.6);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--forest);color:var(--mint);font-family:'Instrument Sans',sans-serif;font-size:16px;line-height:1.6;overflow-x:hidden;cursor:none;}
+
+/* CURSOR */
+.cursor{position:fixed;width:10px;height:10px;background:var(--accent-bright);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:screen;transition:width .3s,height .3s;}
+.cursor-ring{position:fixed;width:38px;height:38px;border:1px solid rgba(109,171,94,0.45);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);}
+.cursor.big{width:18px;height:18px;}
+.cursor-ring.big{width:56px;height:56px;border-color:var(--accent);}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:20px 52px;background:rgba(15,46,21,0.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);transition:padding .3s;}
+nav.scrolled{padding:13px 52px;}
+.logo{font-family:'Fraunces',serif;font-weight:900;font-size:1.5rem;letter-spacing:-.03em;color:var(--mint);text-decoration:none;}
+.logo-dot{color:var(--accent);}
+.nav-links{display:flex;gap:36px;align-items:center;}
+.nav-links a{color:var(--mint-dim);text-decoration:none;font-size:.875rem;font-weight:500;transition:color .2s;position:relative;}
+.nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1px;background:var(--accent);transition:width .3s;}
+.nav-links a:hover{color:var(--mint);}
+.nav-links a:hover::after{width:100%;}
+.nav-cta{background:var(--accent)!important;color:var(--forest)!important;padding:10px 24px;border-radius:6px;font-weight:600!important;}
+.nav-cta::after{display:none!important;}
+.nav-cta:hover{background:var(--accent-bright)!important;color:var(--forest)!important;transform:translateY(-1px);}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:130px 52px 80px;position:relative;overflow:hidden;}
+.hero-mesh{position:absolute;inset:0;overflow:hidden;}
+.mc{position:absolute;border-radius:50%;filter:blur(90px);opacity:.2;animation:float 9s ease-in-out infinite;}
+.mc1{width:600px;height:600px;right:-120px;top:-80px;background:radial-gradient(circle,var(--forest-light),transparent);animation-delay:0s;}
+.mc2{width:380px;height:380px;right:180px;top:220px;background:radial-gradient(circle,rgba(109,171,94,.25),transparent);animation-delay:-3s;}
+.mc3{width:280px;height:280px;left:8%;bottom:12%;background:radial-gradient(circle,rgba(218,226,203,.06),transparent);animation-delay:-5.5s;}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(18px,-25px) scale(1.04);}66%{transform:translate(-10px,18px) scale(.97);}}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(218,226,203,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(218,226,203,.035) 1px,transparent 1px);background-size:72px 72px;animation:gridDrift 22s linear infinite;}
+@keyframes gridDrift{0%{background-position:0 0;}100%{background-position:72px 72px;}}
+.particles{position:absolute;inset:0;overflow:hidden;}
+.particle{position:absolute;width:3px;height:3px;background:var(--accent);border-radius:50%;opacity:0;animation:pRise 7s ease-in infinite;}
+.p1{left:8%;animation-delay:0s;} .p2{left:22%;animation-delay:1.4s;width:2px;height:2px;}
+.p3{left:38%;animation-delay:.7s;} .p4{left:52%;animation-delay:2.3s;width:4px;height:4px;}
+.p5{left:68%;animation-delay:.3s;} .p6{left:82%;animation-delay:3.2s;width:2px;height:2px;}
+.p7{left:14%;animation-delay:1.9s;} .p8{left:58%;animation-delay:2.8s;}
+.p9{left:76%;animation-delay:.15s;width:2px;height:2px;} .p10{left:31%;animation-delay:3.9s;}
+@keyframes pRise{0%{opacity:0;transform:translateY(100vh) scale(0);}10%{opacity:.7;}90%{opacity:.2;}100%{opacity:0;transform:translateY(-8vh) scale(1.4);}}
+.hero-content{position:relative;z-index:1;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(109,171,94,.38);background:rgba(109,171,94,.07);color:var(--accent-bright);padding:7px 18px;border-radius:100px;font-size:.77rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:36px;width:fit-content;animation:heroIn .8s cubic-bezier(.16,1,.3,1) both;}
+.badge-pulse{width:7px;height:7px;border-radius:50%;background:var(--accent-bright);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(109,171,94,.5);}50%{opacity:.7;box-shadow:0 0 0 6px rgba(109,171,94,0);}}
+.hero-headline{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(3.5rem,8vw,7.5rem);line-height:.95;letter-spacing:-.04em;color:var(--mint);max-width:820px;margin-bottom:12px;animation:heroIn .8s .1s cubic-bezier(.16,1,.3,1) both;}
+.hero-headline em{font-style:italic;color:var(--accent);}
+.hero-sub{font-size:clamp(1rem,1.8vw,1.18rem);color:var(--mint-dim);max-width:510px;margin-bottom:52px;font-weight:400;line-height:1.78;animation:heroIn .8s .2s cubic-bezier(.16,1,.3,1) both;}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap;animation:heroIn .8s .3s cubic-bezier(.16,1,.3,1) both;}
+.btn-primary{background:var(--accent);color:var(--forest);padding:15px 36px;border-radius:8px;font-weight:600;font-size:.95rem;text-decoration:none;border:none;cursor:none;transition:transform .25s,background .2s,box-shadow .25s;display:inline-block;}
+.btn-primary:hover{background:var(--accent-bright);transform:translateY(-3px);box-shadow:0 16px 40px rgba(109,171,94,.4);}
+.btn-outline{background:transparent;color:var(--mint);padding:15px 36px;border-radius:8px;font-weight:500;font-size:.95rem;text-decoration:none;border:1px solid var(--border);cursor:none;transition:border-color .2s,background .2s;display:inline-block;}
+.btn-outline:hover{border-color:rgba(218,226,203,.38);background:var(--mint-faint);}
+.hero-stats{display:flex;gap:52px;margin-top:80px;flex-wrap:wrap;animation:heroIn .8s .45s cubic-bezier(.16,1,.3,1) both;padding-top:52px;border-top:1px solid var(--border);}
+.stat-num{font-family:'Fraunces',serif;font-size:2.2rem;font-weight:900;color:var(--mint);line-height:1;letter-spacing:-.03em;}
+.stat-label{font-size:.77rem;color:var(--mint-dim);margin-top:5px;letter-spacing:.06em;text-transform:uppercase;}
+@keyframes heroIn{from{opacity:0;transform:translateY(40px);}to{opacity:1;transform:translateY(0);}}
+
+/* VIDEO */
+.video-section{padding:0 52px 100px;position:relative;z-index:1;}
+.video-wrapper{max-width:960px;margin:0 auto;border-radius:20px;overflow:hidden;border:1px solid var(--border);box-shadow:0 60px 100px rgba(0,0,0,.5),0 0 0 1px rgba(109,171,94,.08);}
+.video-wrapper video{width:100%;display:block;}
+.video-placeholder{aspect-ratio:16/9;background:var(--forest-mid);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;}
+.play-ring{position:relative;width:80px;height:80px;cursor:none;}
+.play-ring::before,.play-ring::after{content:'';position:absolute;inset:0;border-radius:50%;border:2px solid rgba(109,171,94,.35);animation:ringExp 2.2s ease-out infinite;}
+.play-ring::after{animation-delay:.9s;}
+.play-inner{position:absolute;inset:12px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:transform .2s;z-index:1;}
+.play-ring:hover .play-inner{transform:scale(1.12);}
+@keyframes ringExp{0%{transform:scale(1);opacity:.6;}100%{transform:scale(2.1);opacity:0;}}
+.video-label{color:var(--mint-dim);font-size:.85rem;}
+.video-note{color:rgba(218,226,203,.28);font-size:.74rem;font-style:italic;}
+
+/* SHARED */
+.section{padding:110px 52px;position:relative;}
+.inner{max-width:1200px;margin:0 auto;}
+.section-tag{font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+.section-tag::before{content:'';width:22px;height:1px;background:var(--accent);}
+.section-title{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(2rem,4vw,3.4rem);line-height:1.05;letter-spacing:-.03em;color:var(--mint);max-width:580px;margin-bottom:24px;}
+.section-title em{font-style:italic;color:var(--accent);}
+.section-body{color:var(--mint-dim);max-width:520px;font-size:1rem;line-height:1.8;}
+.reveal{opacity:0;transform:translateY(38px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1);}
+.reveal.visible{opacity:1;transform:none;}
+.rd1{transition-delay:.1s;}.rd2{transition-delay:.2s;}.rd3{transition-delay:.3s;}
+
+/* WHAT IS */
+.what-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;}
+.team-chips{display:flex;flex-direction:column;gap:12px;margin-top:32px;}
+.chip{display:flex;align-items:center;gap:16px;padding:18px 22px;background:var(--mint-faint);border:1px solid var(--border);border-radius:12px;transition:border-color .3s,background .3s,transform .3s;}
+.chip:hover{border-color:rgba(109,171,94,.38);background:rgba(109,171,94,.05);transform:translateX(8px);}
+.chip-em{font-size:1.3rem;}
+.chip-t{font-weight:600;font-size:.9rem;color:var(--mint);}
+.chip-d{font-size:.79rem;color:var(--mint-dim);}
+
+/* HOW */
+.how-bg{background:var(--forest-mid);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.how-head{text-align:center;margin-bottom:76px;}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;}
+.step{background:var(--forest);padding:48px 34px;position:relative;overflow:hidden;border:1px solid var(--border);transition:background .3s;}
+.step:first-child{border-radius:16px 0 0 16px;}
+.step:last-child{border-radius:0 16px 16px 0;}
+.step:hover{background:rgba(30,74,42,.55);}
+.step::before{content:attr(data-n);font-family:'Fraunces',serif;font-weight:900;font-size:8rem;color:rgba(218,226,203,.035);line-height:1;position:absolute;bottom:-8px;right:10px;}
+.step:hover::before{color:rgba(109,171,94,.055);}
+.step-ico{width:50px;height:50px;border-radius:12px;background:rgba(109,171,94,.1);border:1px solid rgba(109,171,94,.18);display:flex;align-items:center;justify-content:center;margin-bottom:26px;}
+.step-t{font-family:'Fraunces',serif;font-size:1.25rem;font-weight:700;color:var(--mint);margin-bottom:12px;}
+.step-d{color:var(--mint-dim);font-size:.9rem;line-height:1.7;}
+
+/* COMPARE */
+.cmp-hd{text-align:center;margin-bottom:58px;}
+.cmp-hd .section-title{max-width:100%;}
+.cmp-table{border-radius:16px;overflow:hidden;border:1px solid var(--border);}
+.cmp-head{display:grid;grid-template-columns:1fr 1fr;}
+.ch-bad{padding:18px 30px;background:rgba(255,255,255,.02);color:var(--mint-dim);font-weight:600;font-size:.88rem;letter-spacing:.04em;}
+.ch-good{padding:18px 30px;background:var(--accent);color:var(--forest);font-weight:700;font-size:.88rem;letter-spacing:.04em;}
+.cmp-row{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border);transition:background .2s;}
+.cmp-row:hover .cc-bad{background:rgba(255,255,255,.025);}
+.cmp-row:hover .cc-good{background:rgba(109,171,94,.1);}
+.cc-bad{padding:15px 30px;font-size:.88rem;color:rgba(218,226,203,.38);display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.01);}
+.cc-good{padding:15px 30px;font-size:.88rem;color:var(--mint);display:flex;align-items:center;gap:12px;background:rgba(109,171,94,.03);}
+
+/* PRICING */
+.pricing-bg{background:var(--forest-mid);border-top:1px solid var(--border);border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+.pricing-bg::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 50%,rgba(109,171,94,.07) 0%,transparent 70%);}
+.price-hd{text-align:center;margin-bottom:58px;position:relative;z-index:1;}
+.price-hd .section-title{max-width:100%;}
+.price-hd .section-body{margin:14px auto 0;text-align:center;}
+.price-center{display:flex;justify-content:center;gap:28px;flex-wrap:wrap;position:relative;z-index:1;}
+.price-card{background:var(--forest);border:1px solid rgba(109,171,94,.28);border-radius:24px;padding:48px 44px;max-width:500px;width:100%;position:relative;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,.4);animation:glow 4s ease-in-out infinite alternate;flex:1;min-width:300px;}
+.price-card.featured{border-color:rgba(201,168,76,.45);box-shadow:0 40px 80px rgba(0,0,0,.4),0 0 60px rgba(201,168,76,.08);}
+.price-card.featured::before{background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+@keyframes glow{from{box-shadow:0 40px 80px rgba(0,0,0,.4),0 0 0 rgba(109,171,94,0);}to{box-shadow:0 40px 80px rgba(0,0,0,.4),0 0 80px rgba(109,171,94,.07);}}
+.price-card::before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:shimmer 3s ease-in-out infinite;}
+@keyframes shimmer{0%,100%{opacity:.3;}50%{opacity:1;}}
+.ltd-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.32);color:var(--gold);padding:7px 16px;border-radius:100px;font-size:.73rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px;}
+.ltd-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 1.5s infinite;}
+.old-price{font-size:.95rem;color:rgba(218,226,203,.3);text-decoration:line-through;text-decoration-color:rgba(218,226,203,.3);margin-bottom:4px;display:flex;align-items:center;gap:10px;}
+.save-pill{background:rgba(201,168,76,.14);color:var(--gold);font-size:.68rem;font-weight:700;letter-spacing:.06em;padding:3px 10px;border-radius:4px;text-transform:uppercase;}
+.cur-price{font-family:'Fraunces',serif;font-weight:900;font-size:4.5rem;line-height:1;letter-spacing:-.04em;color:var(--mint);margin-bottom:4px;}
+.cur-price sup{font-size:1.7rem;font-weight:600;vertical-align:super;font-family:'Instrument Sans',sans-serif;}
+.price-note{color:var(--mint-dim);font-size:.84rem;margin-bottom:38px;}
+.price-note strong{color:var(--accent);}
+.pdiv{height:1px;background:var(--border);margin:34px 0;}
+.pf-list{display:flex;flex-direction:column;gap:13px;margin-bottom:38px;}
+.pf{display:flex;align-items:flex-start;gap:14px;}
+.pf-ck{width:22px;height:22px;border-radius:6px;background:rgba(109,171,94,.13);border:1px solid rgba(109,171,94,.28);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;color:var(--accent);font-size:.73rem;}
+.pf-tx{font-size:.9rem;color:var(--mint-dim);line-height:1.5;}
+.pf-tx strong{color:var(--mint);font-weight:500;}
+.price-cta{display:block;width:100%;text-align:center;background:var(--accent);color:var(--forest);padding:18px;border-radius:10px;font-weight:700;font-size:1rem;text-decoration:none;border:none;cursor:none;transition:transform .25s,background .2s,box-shadow .25s;letter-spacing:.01em;}
+.price-cta:hover{background:var(--accent-bright);transform:translateY(-3px);box-shadow:0 16px 40px rgba(109,171,94,.4);}
+.price-disc{text-align:center;font-size:.76rem;color:rgba(218,226,203,.28);margin-top:16px;}
+
+/* TESTIMONIALS */
+.testi-bg{background:var(--forest);border-top:1px solid var(--border);}
+.testi-hd{text-align:center;margin-bottom:58px;}
+.testi-hd .section-title{max-width:100%;}
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+.tcard{background:var(--forest-mid);border:1px solid var(--border);border-radius:18px;padding:36px 32px;display:flex;flex-direction:column;gap:18px;transition:border-color .3s,transform .3s;}
+.tcard:hover{border-color:rgba(109,171,94,.3);transform:translateY(-4px);}
+.tcard-stars{color:var(--gold);font-size:1rem;letter-spacing:2px;}
+.tcard-quote{color:var(--mint-dim);font-size:.92rem;line-height:1.75;font-style:italic;flex:1;}
+.tcard-author{display:flex;align-items:center;gap:14px;border-top:1px solid var(--border);padding-top:18px;}
+.tcard-avatar{width:42px;height:42px;border-radius:50%;background:rgba(109,171,94,.15);border:1px solid rgba(109,171,94,.25);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:900;font-size:1rem;color:var(--accent);flex-shrink:0;}
+.tcard-name{font-weight:600;font-size:.9rem;color:var(--mint);}
+.tcard-role{font-size:.76rem;color:rgba(218,226,203,.35);}
+@media(max-width:900px){.testi-grid{grid-template-columns:1fr;}}
+
+/* ORDER */
+.order-grid{display:grid;grid-template-columns:1fr 1.3fr;gap:80px;align-items:start;}
+.order-perks{margin-top:38px;display:flex;flex-direction:column;gap:13px;}
+.perk{display:flex;align-items:flex-start;gap:13px;}
+.perk-arrow{color:var(--accent);font-size:.9rem;margin-top:2px;}
+.perk-tx{font-size:.9rem;color:var(--mint-dim);line-height:1.5;}
+.perk-tx strong{color:var(--mint);font-weight:500;}
+.fcard{background:var(--forest-mid);border:1px solid var(--border);border-radius:20px;padding:46px 42px;}
+.f-title{font-family:'Fraunces',serif;font-size:1.3rem;font-weight:700;color:var(--mint);margin-bottom:6px;}
+.f-sub{color:var(--mint-dim);font-size:.86rem;margin-bottom:34px;}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:17px;}
+.ff{grid-column:1/-1;}
+.field{display:flex;flex-direction:column;gap:7px;}
+.field label{font-size:.7rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(218,226,203,.42);}
+.field input,.field select,.field textarea{background:rgba(15,46,21,.85);border:1px solid var(--border);border-radius:8px;padding:12px 16px;color:var(--mint);font-family:'Instrument Sans',sans-serif;font-size:.9rem;transition:border-color .2s,box-shadow .2s;outline:none;width:100%;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(109,171,94,.48);box-shadow:0 0 0 3px rgba(109,171,94,.09);}
+.field select option{background:#163820;}
+.field textarea{resize:vertical;min-height:88px;}
+.field input::placeholder,.field textarea::placeholder{color:rgba(218,226,203,.18);}
+.f-btn{width:100%;background:var(--accent);color:var(--forest);border:none;border-radius:8px;padding:16px;font-family:'Instrument Sans',sans-serif;font-size:.97rem;font-weight:700;cursor:none;transition:background .2s,transform .25s,box-shadow .25s;margin-top:8px;letter-spacing:.02em;}
+.f-btn:hover{background:var(--accent-bright);transform:translateY(-2px);box-shadow:0 12px 32px rgba(109,171,94,.32);}
+.f-foot{text-align:center;font-size:.76rem;color:rgba(218,226,203,.22);margin-top:13px;}
+
+/* BOOKING */
+.booking-bg{background:var(--forest-mid);}
+.booking-center{max-width:1000px;margin:0 auto;text-align:center;}
+.booking-center .section-title{max-width:100%;margin:0 auto 14px;}
+.booking-center .section-body{margin:0 auto 50px;}
+.cal-wrap{border-radius:20px;overflow:hidden;border:1px solid var(--border);background:#fff;min-height:700px;}
+.cal-note{font-size:.78rem;color:rgba(218,226,203,.28);margin-top:13px;font-style:italic;}
+
+/* FOOTER */
+footer{background:var(--forest);padding:58px 52px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:24px;}
+.ft-tag{color:var(--mint-dim);font-size:.8rem;margin-top:6px;}
+.ft-links{display:flex;gap:30px;flex-wrap:wrap;}
+.ft-links a{color:rgba(218,226,203,.38);text-decoration:none;font-size:.84rem;transition:color .2s;}
+.ft-links a:hover{color:var(--mint);}
+.ft-contact{display:flex;flex-direction:column;gap:5px;text-align:right;}
+.ft-contact a{color:var(--mint-dim);text-decoration:none;font-size:.84rem;transition:color .2s;}
+.ft-contact a:hover{color:var(--accent);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(12px);}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--forest-mid);border:1px solid var(--border);border-radius:20px;padding:52px 44px;max-width:440px;width:90%;text-align:center;transform:scale(.92) translateY(20px);transition:transform .4s cubic-bezier(.16,1,.3,1);}
+.modal-overlay.open .modal{transform:scale(1) translateY(0);}
+.m-icon{font-size:3rem;margin-bottom:18px;}
+.m-title{font-family:'Fraunces',serif;font-size:1.8rem;font-weight:800;color:var(--mint);margin-bottom:13px;}
+.m-text{color:var(--mint-dim);font-size:.93rem;line-height:1.7;margin-bottom:30px;}
+.m-close{background:var(--accent);color:var(--forest);border:none;border-radius:8px;padding:13px 36px;cursor:none;font-size:.93rem;font-weight:700;font-family:'Instrument Sans',sans-serif;transition:background .2s;}
+.m-close:hover{background:var(--accent-bright);}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  nav{padding:14px 20px;} .nav-links{display:none;}
+  .hero,.section,.pricing-bg,.booking-bg,.order-section,.testi-bg{padding-left:20px;padding-right:20px;}
+  .what-grid,.order-grid{grid-template-columns:1fr;gap:44px;}
+  .steps{grid-template-columns:1fr;gap:2px;}
+  .step:first-child{border-radius:16px 16px 0 0;} .step:last-child{border-radius:0 0 16px 16px;}
+  .fg{grid-template-columns:1fr;}
+  .cmp-row{grid-template-columns:1fr;} .cc-bad,.ch-bad{display:none;}
+  .cmp-head{grid-template-columns:1fr;}
+  .price-center{flex-direction:column;align-items:center;}
+  footer{flex-direction:column;align-items:flex-start;} .ft-contact{text-align:left;}
+  .hero-stats{gap:28px;} .price-card{padding:38px 24px;} .cur-price{font-size:3.4rem;}
+  body{cursor:auto;} .cursor,.cursor-ring{display:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cur"></div>
+<div class="cursor-ring" id="curR"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="logo">checkins<span class="logo-dot">.</span></a>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#testimonials">Reviews</a>
+    <a href="#order">Order</a>
+    <a href="#meeting">Book a call</a>
+    <a href="#order" class="nav-cta">Get Started →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-mesh">
+    <div class="mc mc1"></div>
+    <div class="mc mc2"></div>
+    <div class="mc mc3"></div>
+  </div>
+  <div class="hero-grid"></div>
+  <div class="particles">
+    <div class="particle p1"></div><div class="particle p2"></div><div class="particle p3"></div>
+    <div class="particle p4"></div><div class="particle p5"></div><div class="particle p6"></div>
+    <div class="particle p7"></div><div class="particle p8"></div><div class="particle p9"></div>
+    <div class="particle p10"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge"><div class="badge-pulse"></div>Attendance Management System</div>
+    <h1 class="hero-headline">Attendance<br>that runs<br><em>itself.</em></h1>
+    <p class="hero-sub">One URL. One QR code. No app, no login, no complexity. Checkins replaces WhatsApp messages, paper registers, and Excel chaos — forever.</p>
+    <div class="hero-actions">
+      <a href="#order" class="btn-primary">Order Your System →</a>
+      <a href="#meeting" class="btn-outline">Book a Free Call</a>
+    </div>
+    <div class="hero-stats">
+      <div><div class="stat-num">3–30</div><div class="stat-label">Team size sweet spot</div></div>
+      <div><div class="stat-num">0</div><div class="stat-label">Apps to install</div></div>
+      <div><div class="stat-num" data-count="30">30 days</div><div class="stat-label">History auto-saved</div></div>
+      <div><div class="stat-num">1×</div><div class="stat-label">One-time payment</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- VIDEO -->
+<section class="video-section">
+  <div class="video-wrapper reveal">
+    <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;">
+      <iframe
+        src="https://www.youtube.com/embed/I_NH-G-LnAw"
+        title="Checkins Demo"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen
+        style="position:absolute;top:0;left:0;width:100%;height:100%;display:block;">
+      </iframe>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT IS -->
+<section class="section" id="what">
+  <div class="inner what-grid">
+    <div class="reveal">
+      <div class="section-tag">What is Checkins?</div>
+      <h2 class="section-title">Replace the chaos. Keep it <em>simple.</em></h2>
+      <p class="section-body">Checkins is a web-based attendance management portal for small teams and startups. One shared link or QR code. Any device. No login. No app. No manual work.</p>
+    </div>
+    <div class="reveal rd1">
+      <div class="team-chips">
+        <div class="chip"><span class="chip-em">🚀</span><div><div class="chip-t">Startups</div><div class="chip-d">Move fast without attendance overhead</div></div></div>
+        <div class="chip"><span class="chip-em">🏢</span><div><div class="chip-t">Agencies</div><div class="chip-d">Track remote and in-office members alike</div></div></div>
+        <div class="chip"><span class="chip-em">🏪</span><div><div class="chip-t">Small Businesses</div><div class="chip-d">No IT overhead, no enterprise pricing</div></div></div>
+        <div class="chip"><span class="chip-em">🌍</span><div><div class="chip-t">Remote-first Teams</div><div class="chip-d">Live dashboard from any device, anywhere</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section how-bg" id="how">
+  <div class="inner">
+    <div class="how-head reveal">
+      <div class="section-tag" style="justify-content:center;">How it works</div>
+      <h2 class="section-title" style="max-width:100%;margin:0 auto;">Two parts. <em>Zero complexity.</em></h2>
+    </div>
+    <div class="steps">
+      <div class="step reveal" data-n="01">
+        <div class="step-ico"><svg width="22" height="22" fill="none" stroke="#6dab5e" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M12 8v8" stroke-linecap="round"/></svg></div>
+        <div class="step-t">The Portal</div>
+        <div class="step-d">Hosted free on GitHub Pages. Team scans the QR code or opens the URL, picks their name, clicks Check In or Check Out. That's the entire workflow — forever.</div>
+      </div>
+      <div class="step reveal rd1" data-n="02">
+        <div class="step-ico"><svg width="22" height="22" fill="none" stroke="#6dab5e" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke-linecap="round"/></svg></div>
+        <div class="step-t">The Database</div>
+        <div class="step-d">A Google Sheet lives silently in the background. Every check-in and checkout is automatically saved. 30 days of history. Nobody needs to touch it.</div>
+      </div>
+      <div class="step reveal rd2" data-n="03">
+        <div class="step-ico"><svg width="22" height="22" fill="none" stroke="#6dab5e" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3" stroke-linecap="round"/></svg></div>
+        <div class="step-t">Fully Automatic</div>
+        <div class="step-d">Late flags auto-trigger. Absent marked at 11 PM every weekday. Weekends blocked. Live data synced everywhere. Zero admin work needed from you.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BEFORE VS AFTER -->
+<section class="section" id="compare">
+  <div class="inner">
+    <div class="cmp-hd reveal">
+      <div class="section-tag" style="justify-content:center;">Before vs After</div>
+      <h2 class="section-title" style="max-width:100%;margin:0 auto;">See the difference <em>instantly.</em></h2>
+    </div>
+    <div class="cmp-table reveal">
+      <div class="cmp-head"><div class="ch-bad">❌ Without Checkins</div><div class="ch-good">✅ With Checkins</div></div>
+      <div class="cmp-row"><div class="cc-bad">💬 WhatsApp messages to mark attendance</div><div class="cc-good">🔗 One URL or QR code — open & click Check In</div></div>
+      <div class="cmp-row"><div class="cc-bad">❓ No record of who was late</div><div class="cc-good">⏰ Auto late flag after your custom threshold</div></div>
+      <div class="cmp-row"><div class="cc-bad">📋 Manual absent tracking every single day</div><div class="cc-good">🤖 Auto absent marked at 11 PM every weekday</div></div>
+      <div class="cmp-row"><div class="cc-bad">📱 Data lost or stuck in someone's phone</div><div class="cc-good">📊 30-day history saved in Google Sheets</div></div>
+      <div class="cmp-row"><div class="cc-bad">🚫 Can't check team status remotely</div><div class="cc-good">🖥️ Live dashboard from any device, anywhere</div></div>
+      <div class="cmp-row"><div class="cc-bad">😕 Weekend confusion, manual management</div><div class="cc-good">📅 Saturdays & Sundays fully blocked automatically</div></div>
+      <div class="cmp-row"><div class="cc-bad">💸 Expensive enterprise HR software</div><div class="cc-good">✅ One-time affordable custom deployment</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section pricing-bg" id="pricing">
+  <div class="inner">
+    <div class="price-hd reveal">
+      <div class="section-tag" style="justify-content:center;">Pricing</div>
+      <h2 class="section-title" style="max-width:100%;margin:0 auto;">One price. <em>Forever yours.</em></h2>
+      <p class="section-body" style="margin:14px auto 0;text-align:center;">No subscriptions. No monthly fees. Pay once, own your system completely.</p>
+    </div>
+    <div class="price-center">
+      <!-- STARTER PLAN -->
+      <div class="price-card reveal">
+        <div class="ltd-badge"><div class="ltd-dot"></div>🔥 Limited Time Offer</div>
+        <div style="font-family:'Fraunces',serif;font-weight:700;font-size:1.15rem;color:var(--mint);margin-bottom:6px;">Perfect for Small Teams</div>
+        <div class="old-price">PKR 9,000 <span class="save-pill">Save 39%</span></div>
+        <div class="cur-price"><sup>PKR</sup> 5,500</div>
+        <div style="display:inline-block;background:rgba(109,171,94,.1);border:1px solid rgba(109,171,94,.25);border-radius:20px;padding:4px 14px;font-size:.82rem;color:var(--accent);font-weight:600;margin-bottom:10px;letter-spacing:.3px;">≈ $20 USD</div>
+        <div class="price-note">One-time payment · <strong>Custom deployment included</strong> · Yours forever</div>
+        <div class="pdiv"></div>
+        <div class="pf-list">
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx"><strong>Basic customization</strong> for your company</div></div>
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx">Designed for <strong>teams of 2 to 15 members</strong></div></div>
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx"><strong>Custom-branded</strong> attendance portal</div></div>
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx"><strong>Work hours configured</strong> — check-in, late threshold &amp; checkout</div></div>
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx"><strong>Team members pre-loaded</strong> — ready from day one</div></div>
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx"><strong>QR code generated</strong> for office attendance</div></div>
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx"><strong>Google Sheets backend</strong> — your data always belongs to you</div></div>
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx"><strong>GitHub Pages hosting</strong> — free forever</div></div>
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx"><strong>Auto late &amp; absent marking</strong></div></div>
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx"><strong>30 Days Attendance History</strong> — searchable &amp; filterable</div></div>
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx">Simple, fast &amp; easy-to-use attendance management system</div></div>
+        </div>
+        <a href="#order" class="price-cta">Order Now for PKR 5,500 →</a>
+        <p class="price-disc">Price reverts to PKR 9,000 soon · No payment required to submit order request</p>
+      </div>
+
+      <!-- GROWTH PLAN -->
+      <div class="price-card featured reveal rd1">
+        <div class="ltd-badge" style="background:rgba(201,168,76,.12);border-color:rgba(201,168,76,.38);color:var(--gold);"><div class="ltd-dot"></div>⭐ Most Popular</div>
+        <div style="font-family:'Fraunces',serif;font-weight:700;font-size:1.15rem;color:var(--mint);margin-bottom:6px;">Built for Growing Teams &amp; Businesses</div>
+        <div class="old-price">PKR 15,800 <span class="save-pill">Save 40%</span></div>
+        <div class="cur-price" style="font-size:3.8rem;"><sup>PKR</sup> 9,500</div>
+        <div style="display:inline-block;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.28);border-radius:20px;padding:4px 14px;font-size:.82rem;color:var(--gold);font-weight:600;margin-bottom:10px;letter-spacing:.3px;">≈ $34 USD</div>
+        <div class="price-note">One-time payment · <strong>Advanced customization included</strong> · Yours forever</div>
+        <div class="pdiv"></div>
+        <div class="pf-list">
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx"><strong>Advanced customization</strong> for your company</div></div>
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx">Designed for <strong>teams of 15 to 30 members</strong></div></div>
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx"><strong>Everything included</strong> in the Starter Plan</div></div>
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx"><strong>180 Days Attendance History</strong> — searchable &amp; filterable</div></div>
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx"><strong>More custom attendance policies</strong> &amp; shift timings</div></div>
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx">Scalable system for <strong>growing startups &amp; small businesses</strong></div></div>
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx"><strong>Enhanced employee &amp; attendance management</strong></div></div>
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx"><strong>Multiple department/team support</strong></div></div>
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx"><strong>Priority setup &amp; deployment support</strong></div></div>
+          <div class="pf"><div class="pf-ck">✓</div><div class="pf-tx">Optimized for <strong>larger operational teams</strong></div></div>
+        </div>
+        <a href="#order" class="price-cta" style="background:var(--gold);color:#1a1000;">Order Now for PKR 9,500 →</a>
+        <p class="price-disc">Price reverts to PKR 15,800 soon · No payment required to submit order request</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="section testi-bg" id="testimonials">
+  <div class="inner">
+    <div class="testi-hd reveal">
+      <div class="section-tag" style="justify-content:center;">Testimonials</div>
+      <h2 class="section-title" style="max-width:100%;margin:0 auto;">Trusted by teams <em>like yours.</em></h2>
+      <p class="section-body" style="margin:14px auto 0;text-align:center;">Here's what our customers have to say about CheckIns.</p>
+    </div>
+    <div class="testi-grid">
+      <div class="tcard reveal">
+        <div class="tcard-stars">★★★★★</div>
+        <div class="tcard-quote">"We needed an attendance management system for our startup during the launch phase, so we reached out to CheckIns. The team customized the system according to our requirements, and the entire experience was smooth and professional. We're very satisfied with both the service and the system."</div>
+        <div class="tcard-author">
+          <div class="tcard-avatar">M</div>
+          <div>
+            <div class="tcard-name">Mir Hamza</div>
+            <div class="tcard-role">Startup Founder</div>
+          </div>
+        </div>
+      </div>
+      <div class="tcard reveal rd1">
+        <div class="tcard-stars">★★★★★</div>
+        <div class="tcard-quote">"I run a social media agency and needed an affordable way to manage and track my team's attendance. CheckIns provided a simple, effective solution that works really well for us. Highly recommended if you're looking for a budget-friendly attendance system."</div>
+        <div class="tcard-author">
+          <div class="tcard-avatar">K</div>
+          <div>
+            <div class="tcard-name">Katherine</div>
+            <div class="tcard-role">Agency Owner</div>
+          </div>
+        </div>
+      </div>
+      <div class="tcard reveal rd2">
+        <div class="tcard-stars">★★★★★</div>
+        <div class="tcard-quote">"We got a customized attendance portal for our team of 22 employees while working within a limited budget. The system is affordable, easy to use, and backed by great customer service. It has been over 2 months now, and everything is running perfectly."</div>
+        <div class="tcard-author">
+          <div class="tcard-avatar">A</div>
+          <div>
+            <div class="tcard-name">Ali</div>
+            <div class="tcard-role">Operations Manager</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ORDER FORM -->
+<section class="section order-section" id="order">
+  <div class="inner order-grid">
+    <div class="reveal">
+      <div class="section-tag">Place Your Order</div>
+      <h2 class="section-title">Let's build your custom portal.</h2>
+      <p class="section-body">Fill in the details and Muhammad Hassan will set up a fully customised Checkins system — branded, configured, and ready for your team.</p>
+      <div class="order-perks">
+        <div class="perk"><div class="perk-arrow">→</div><div class="perk-tx"><strong>Custom branded</strong> — your team name on the portal</div></div>
+        <div class="perk"><div class="perk-arrow">→</div><div class="perk-tx"><strong>Your work hours</strong> — check-in, late & checkout configured</div></div>
+        <div class="perk"><div class="perk-arrow">→</div><div class="perk-tx"><strong>Team pre-loaded</strong> — names and roles ready on day one</div></div>
+        <div class="perk"><div class="perk-arrow">→</div><div class="perk-tx"><strong>QR code delivered</strong> — print and display in your office</div></div>
+        <div class="perk"><div class="perk-arrow">→</div><div class="perk-tx"><strong>Response within 24 hours</strong> — no long waits</div></div>
+      </div>
+    </div>
+    <div class="fcard reveal rd1">
+      <div class="f-title">Order Your System</div>
+      <div class="f-sub">We'll reach out within 24 hours to confirm your setup.</div>
+      <form id="orderForm" action="https://formspree.io/f/mvzlwknp" method="POST" onsubmit="handleSubmit(event)">
+        <div class="fg">
+          <div class="field"><label>Full Name *</label><input type="text" name="name" placeholder="Muhammad Hassan" required></div>
+          <div class="field"><label>Email *</label><input type="email" name="email" placeholder="you@company.com" required></div>
+          <div class="field"><label>WhatsApp / Phone</label><input type="tel" name="phone" placeholder="+92 300 0000000"></div>
+          <div class="field"><label>Company / Team Name *</label><input type="text" name="company" placeholder="Your Company" required></div>
+          <div class="field"><label>Team Size *</label>
+            <select name="team_size" required>
+              <option value="" disabled selected>Select size</option>
+              <option>3–5 people</option><option>6–10 people</option>
+              <option>11–20 people</option><option>21–30 people</option><option>30+ people</option>
+            </select>
+          </div>
+          <div class="field"><label>Industry</label>
+            <select name="industry">
+              <option value="" disabled selected>Select industry</option>
+              <option>Tech / Software</option><option>Agency / Marketing</option>
+              <option>Retail / Shop</option><option>Education</option>
+              <option>Healthcare</option><option>Other</option>
+            </select>
+          </div>
+          <div class="field"><label>Check-in Time</label><input type="time" name="checkin" value="09:00"></div>
+          <div class="field"><label>Late After</label><input type="time" name="late" value="09:30"></div>
+          <div class="field"><label>Check-out Time</label><input type="time" name="checkout" value="17:00"></div>
+          <div class="field"><label>Working Days</label>
+            <select name="days">
+              <option>Mon–Fri (5 days)</option><option>Mon–Sat (6 days)</option><option>Custom</option>
+            </select>
+          </div>
+          <div class="field ff"><label>Team Members (names & roles)</label>
+            <textarea name="members" placeholder="e.g.&#10;Muhammad Hassan – CEO&#10;Aqsa Sohail – COO&#10;Mahnoor Shehzad – CFO"></textarea>
+          </div>
+          <div class="field ff"><label>Anything else?</label>
+            <textarea name="notes" placeholder="Branding preferences, special requirements…"></textarea>
+          </div>
+        </div>
+        <button type="submit" class="f-btn">Submit Order — PKR 5,500 →</button>
+        <p class="f-foot">No payment required yet. We confirm details first.</p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- BOOK A MEETING -->
+<section class="section booking-bg" id="meeting">
+  <div class="booking-center inner">
+    <div class="reveal">
+      <div class="section-tag" style="justify-content:center;">Book a 1-on-1 Call</div>
+      <h2 class="section-title">Talk to us <em>before</em> you order.</h2>
+      <p class="section-body">Have questions? Want a live demo? Book a free 15-minute call — no commitment needed.</p>
+    </div>
+    <div class="cal-wrap reveal">
+      <!--
+        CALENDLY SETUP:
+        1. Sign up free at calendly.com
+        2. Create an event type (e.g. "15-min intro call")
+        3. Your link: calendly.com/YOUR-USERNAME/event-name
+        4. Replace the src below with YOUR Calendly link
+        YES — you need to update this link.
+      -->
+      <iframe src="https://calendly.com/thehasan249/15-min-checkins-demo" width="100%" height="700" frameborder="0" scrolling="no" style="border-radius:20px;" title="Book a meeting with Muhammad Hassan"></iframe>
+    </div>
+    <p class="cal-note">Book Now </p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <a href="#" class="logo">checkins<span class="logo-dot">.</span></a>
+    <div class="ft-tag">Simple. Automatic. Shared. · Built by Muhammad Hassan</div>
+  </div>
+  <div class="ft-links">
+    <a href="#what">About</a><a href="#how">How it works</a>
+    <a href="#pricing">Pricing</a><a href="#order">Order</a><a href="#meeting">Book a call</a>
+  </div>
+  <div class="ft-contact">
+    <a href="mailto:hasan.zaplock@gmail.com">hasan.zaplock@gmail.com</a>
+    <a href="tel:+923355768530">+92 335 5768530</a>
+  </div>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="m-icon">🎉</div>
+    <div class="m-title">Order Received!</div>
+    <div class="m-text">Muhammad Hassan will review your request and get back to you within 24 hours to confirm your custom Checkins setup.</div>
+    <button class="m-close" onclick="document.getElementById('modal').classList.remove('open')">Got it!</button>
+  </div>
+</div>
+
+<script>
+// Custom cursor
+const cur = document.getElementById('cur'), curR = document.getElementById('curR');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';});
+(function animR(){rx+=(mx-rx)*.13;ry+=(my-ry)*.13;curR.style.left=rx+'px';curR.style.top=ry+'px';requestAnimationFrame(animR);})();
+document.querySelectorAll('a,button,.chip,.step,.price-card').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cur.classList.add('big');curR.classList.add('big');});
+  el.addEventListener('mouseleave',()=>{cur.classList.remove('big');curR.classList.remove('big');});
+});
+
+// Nav scroll
+window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('scrolled',scrollY>60));
+
+// Scroll reveal
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target);}});},{threshold:.1,rootMargin:'0px 0px -55px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// Form submit — Formspree
+async function handleSubmit(e){
+  e.preventDefault();
+  const form = e.target;
+  const btn = form.querySelector('.f-btn');
+  btn.textContent = 'Sending…';
+  btn.disabled = true;
+  try {
+    const res = await fetch('https://formspree.io/f/mvzlwknp', {
+      method: 'POST',
+      body: new FormData(form),
+      headers: { 'Accept': 'application/json' }
+    });
+    if (res.ok) {
+      document.getElementById('modal').classList.add('open');
+      form.reset();
+    } else {
+      const data = await res.json();
+      alert(data.errors ? data.errors.map(e=>e.message).join(', ') : 'Something went wrong. Please try again.');
+    }
+  } catch(err) {
+    alert('Network error. Please check your connection and try again.');
+  }
+  btn.textContent = 'Submit Order — PKR 5,500 →';
+  btn.disabled = false;
+}
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+</script>
+</body>
+</html>
